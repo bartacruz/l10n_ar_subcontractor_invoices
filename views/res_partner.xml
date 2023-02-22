@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_partner_property_form_inherit" model="ir.ui.view">
+        <field name="name">res.partner.form</field>
+        <field name="model">res.partner</field>
+        <field eval="90" name="priority" />
+        <field name="inherit_id" ref="account.view_partner_property_form" />
+        <field name="arch" type="xml">
+            <group name="accounting_entries" position="after">
+                <group name="thirdParty" string="Third Party Invoicing">
+                    <field name="third_party_pos_number" />
+                </group>
+            </group>
+        </field>
+    </record>
+
+</odoo>
