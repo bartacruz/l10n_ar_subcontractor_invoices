@@ -10,10 +10,11 @@
         using AFIP electronic invoices""",
     
     "license": "AGPL-3",
-    'depends': ['account','sale', 'purchase','l10n_ar_afipws_fe'],
+    'depends': ['account','sale_purchase','l10n_ar_afipws_fe'],
     'data': [
         'views/account_journal.xml',
         'views/account_move.xml',
+        'views/product_template.xml',
         'views/purchase_order.xml',
         'views/res_partner.xml',
     ],

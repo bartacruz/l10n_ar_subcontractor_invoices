@@ -19,17 +19,15 @@ class PurchaseOrder(models.Model):
     def _compute_invoiced_by_subcontractor(self):
         for record in self:
             #print("record=",record,[l.product_id.invoice_policy for l in record.order_line])
-            tp = [l.product_id.invoice_policy == 'subcontractor' for l in record.order_line]
-            third_all = all(tp)
-            third_any = any(tp)
+            ibs = [l.product_id.invoiced_by_subcontractor for l in record.order_line]
             #print("PurchaseOrder",record, "compute_subcontractor",record.order_line,tp)
-            if not third_all and third_any:
+            if not all(ibs) and any(ibs):
                 # raise ValidationError(_('Third party records must have ALL third party lines.'
                 #                         'problematic record: %s' % record))
                 _logger.warning(_('Third party records must have ALL third party lines.'
                                         'problematic record: %s' % record))
-            record.invoiced_by_subcontractor = third_all
-            if record.invoiced_by_subcontractor:
+            record.invoiced_by_subcontractor = all(ibs) and any(ibs)
+            if record.invoiced_by_subcontractor and record._get_sale_orders().partner_id:
                 record.subcontractor_customer_id = record._get_sale_orders().partner_id.id
 
     # override
@@ -39,6 +37,7 @@ class PurchaseOrder(models.Model):
         self.ensure_one()
         vals = super(PurchaseOrder, self)._prepare_invoice()
         if self.invoiced_by_subcontractor and self.subcontractor_customer_id:
+            
             # purchase.order genera facturas de proveedores ("in_invoice") en
             # el diario de compras.
             # Las facturas terecerizadas deben ser "out_invoice" (son hacia
