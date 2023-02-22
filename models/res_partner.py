@@ -1,11 +1,16 @@
-from odoo import fields, models, api, _
-import logging
+# -*- coding: utf-8 -*-
+##############################################################################
+# For copyright and license notices, see __manifest__.py file in module root
+# directory
+##############################################################################
 
-_logger = logging.getLogger(__name__)
+from odoo import fields, models, api, _
 
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    third_party_pos_number = fields.Integer(string=_('Third Party POS'),
-                                            help=_('Point of sale used to post third party invoices'))
+    subcontractor_pos_number = fields.Integer(string=_('Subcontractor POS'),
+                                            help=_('Point of sale used to post subcontractor invoices'))
+
+
     

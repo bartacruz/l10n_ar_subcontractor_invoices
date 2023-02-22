@@ -9,7 +9,7 @@
         <field name="arch" type="xml">
             <group name="accounting_entries" position="after">
                 <group name="thirdParty" string="Third Party Invoicing">
-                    <field name="third_party_pos_number" />
+                    <field name="subcontractor_pos_number" />
                 </group>
             </group>
         </field>

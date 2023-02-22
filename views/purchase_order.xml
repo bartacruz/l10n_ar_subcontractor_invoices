@@ -8,8 +8,8 @@
         <field name="arch" type="xml">
             
             <xpath expr="//field[@name='partner_ref']" position="after">
-                <field name="is_third_party_billed" />
-                <field name="third_party_customer_id"/>
+                <field name="invoiced_by_subcontractor" />
+                <field name="subcontractor_customer_id"/>
             </xpath>
             
         </field>

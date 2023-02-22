@@ -7,8 +7,8 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <group id="header_right_group" position="inside">
-                <field name="is_third_party_billed" />
-                <field name="third_party_partner_id" />
+                <field name="invoiced_by_subcontractor" />
+                <field name="subcontractor_partner_id" />
             </group>
         </field>
     </record>
