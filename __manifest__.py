@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Third Party Invoices",
+    'name': "Subcontractor invoices to clients",
     'version': '15.0.0.1.0',
     'category': 'Localization/Argentina',
     'author': "Julio Santa Cruz",
