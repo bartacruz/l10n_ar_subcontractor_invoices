@@ -22,6 +22,19 @@ class AccountMove(models.Model):
         journal = self.env['account.journal'].search(domain, limit=1)
         return journal
     
+    def _fix_subcontractor_tax_lines(self):
+        self.ensure_one()
+        print('_fix_subcontractor_tax_lines')
+        # find tax lines
+        tax_lines = self.line_ids.filtered('tax_repartition_line_id')
+        product_id = self.line_ids.mapped('product_id')
+        print('_fix_subcontractor_tax_lines pre=',tax_lines,product_id)
+        if tax_lines and product_id:
+            account_id = product_id[0]._get_product_accounts()['income']
+            print('_fix_subcontractor_tax_lines change',tax_lines.mapped('account_id.name'),"to",account_id.name)
+            tax_lines.account_id = account_id
+        print('_fix_subcontractor_tax_lines exiting')
+        
     @api.depends('invoice_line_ids')
     def _compute_invoiced_by_subcontractor(self):
         for record in self:
@@ -35,6 +48,8 @@ class AccountMove(models.Model):
             else:    
                 record.invoiced_by_subcontractor = any(ibs) and all(ibs)
             print('_compute_invoiced_by_subcontractor', record,record.invoiced_by_subcontractor)
+            if record.invoiced_by_subcontractor:
+                record._fix_subcontractor_tax_lines()
     
     def _compute_l10n_latam_document_type(self):
         if not self.invoiced_by_subcontractor:
@@ -69,6 +84,25 @@ class AccountMove(models.Model):
         letters = list(set(subcontractor_letters) & set(customer_letters))
         types = self.env['l10n_latam.document.type'].search(['&',('l10n_ar_letter','in',letters), ('internal_type','=','invoice')])
         self.l10n_latam_document_type_id = types[0]
+        
+    # def _move_autocomplete_invoice_lines_values(self):
+    #     print('_move_autocomplete_invoice_lines_values')
+    #     super(AccountMove, self)._move_autocomplete_invoice_lines_values()
+        
+    # def _recompute_tax_lines(self, recompute_tax_base_amount=False, tax_rep_lines_to_recompute=None):
+    #     print('_recompute_tax_lines entering')
+    #     super(AccountMove, self)._recompute_tax_lines(recompute_tax_base_amount, tax_rep_lines_to_recompute)
+    #     if self.invoiced_by_subcontractor:
+    #         print('_recompute_tax_lines subcontractor')
+    #         # find tax lines
+    #         tax_lines = self.line_ids.filtered('tax_repartition_line_id')
+    #         product_id = self.line_ids.mapped('product_id')
+    #         print('_recompute_tax_lines pre=',tax_lines,product_id)
+    #         if tax_lines and product_id:
+    #             account_id = product_id[0]._get_product_accounts()['income']
+    #             print('_recompute_tax_lines post',account_id.name)
+    #             tax_lines.account_id = account_id
+    #     print('_recompute_tax_lines exiting')
 
     # sequence.mixin override
     def _get_last_sequence_domain(self, relaxed=False):
