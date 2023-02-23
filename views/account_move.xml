@@ -4,7 +4,7 @@
     <record id="view_move_form" model="ir.ui.view">
         <field name="name">view_move_form inherit</field>
         <field name="model">account.move</field>
-        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="inherit_id" ref="account.view_move_form" />
         <field name="arch" type="xml">
             <group id="header_right_group" position="inside">
                 <field name="invoiced_by_subcontractor" />
@@ -13,4 +13,21 @@
         </field>
     </record>
 
+    <template id="report_invoice_document" inherit_id="l10n_ar.report_invoice_document">
+        <t t-set="header_address" position="replace">
+            <t t-if="o.subcontractor_partner_id">
+                <t t-set="header_address" t-value="o.subcontractor_partner_id" />
+            </t>
+            <t t-else="">
+                <t t-set="header_address" t-value="o.journal_id.l10n_ar_afip_pos_partner_id" />
+            </t>
+
+        </t>
+    </template>
+
+    <template id="custom_header" inherit_id="l10n_ar_ux.custom_header">
+        <img t-if="header_address.image_1920" position="attributes">
+            <attribute name="t-if"> header_address.image_1920 and not o.subcontractor_partner_id</attribute>
+        </img>
+    </template>
 </odoo>
