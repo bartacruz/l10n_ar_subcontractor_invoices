@@ -30,4 +30,58 @@
             <attribute name="t-if"> header_address.image_1920 and not o.subcontractor_partner_id</attribute>
         </img>
     </template>
+
+    <record id="account_invoice_view_tree" model="ir.ui.view">
+        <field name="name">account.move.tree.inherit.subcontractor</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <field name="invoice_partner_display_name" position="before">
+                <field name="invoiced_by_display_name" invisible="context.get('default_move_type') not in ('out_invoice', 'out_refund','out_receipt')" optional="hide"/>
+            </field>
+        </field>
+    </record>
+    <record id="subcontractor_invoice_view_tree" model="ir.ui.view">
+        <field name="name">Subcontractor invoice tree</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <field name="invoiced_by_display_name" position="attributes">
+                <attribute name="optional">show</attribute>
+            </field>
+        </field>
+    </record>
+    <record id="account_invoice_filter_inherit" model="ir.ui.view">
+        <field name="name">account.move.groupby</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_user_id']" position="after">
+                <field name="subcontractor_partner_id"/>
+            </xpath>
+            <xpath expr="//filter[@name='myinvoices']" position="after">
+                <filter domain="[('invoiced_by_subcontractor', '!=', False)]" name="subcontractor_filter" help="Subcontractor Invoices"/>
+            </xpath>
+            <xpath expr="//group/filter[@name='status']" position="after">
+                <filter string="Subcontractor" name="subcontractor_group" domain="[]" context="{'group_by':'subcontractor_partner_id'}"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="action_subcontractor_invoice_type" model="ir.actions.act_window">
+        <field name="name">Subcontractor Invoices</field>
+        <field name="res_model">account.move</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="view_id" ref="account.view_out_invoice_tree"/>
+        <field name="search_view_id" ref="account.view_account_invoice_filter"/>
+        <field name="domain">[('move_type', '=', 'out_invoice')]</field>
+        <field name="context">{'default_move_type': 'out_invoice','search_default_subcontractor_filter': True}</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            Create a subcontractor invoice
+          </p><p>
+            Create subcontractor invoices, register payments and keep track of the discussions with your customers.
+          </p>
+        </field>
+    </record>
+    <menuitem id="menu_subcontractor_invoices" name="Subcontractor Invoices" sequence="22" parent="account.menu_finance_payables" action="action_subcontractor_invoice_type"/>
 </odoo>

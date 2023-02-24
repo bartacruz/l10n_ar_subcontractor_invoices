@@ -13,6 +13,15 @@ class AccountMove(models.Model):
     # TODO: agregar un constrain. Si es invoiced_by_subcontractor TIENE que tener el partner seteado
     invoiced_by_subcontractor = fields.Boolean(compute='_compute_invoiced_by_subcontractor', string=_('Invoiced by subcontractor'), store=True)
     subcontractor_partner_id = fields.Many2one('res.partner', string=_('Invoice subcontractor'))
+    invoiced_by_display_name = fields.Char(_('Invoiced by'), compute="_compute_invoiced_by", store=True)
+    
+    @api.depends('subcontractor_partner_id','invoiced_by_subcontractor')
+    def _compute_invoiced_by(self):
+        for record in self:
+            if record.invoiced_by_subcontractor:
+                record.invoiced_by_display_name = record.subcontractor_partner_id.name
+            else:
+                record.invoiced_by_display_name = record.company_id.partner_id.name
     
     @api.model
     def _get_subcontractor_journal(self, journal_types):
@@ -52,39 +61,49 @@ class AccountMove(models.Model):
                 record._fix_subcontractor_tax_lines()
     
     def _compute_l10n_latam_document_type(self):
-        if not self.invoiced_by_subcontractor:
-            super(AccountMove, self)._compute_l10n_latam_document_type()
-            return
+        no_subinvoiced = self.filtered(lambda x: not x.invoiced_by_subcontractor)
+        super(AccountMove, no_subinvoiced)._compute_l10n_latam_document_type()
+        for record in self-no_subinvoiced:
         
-        issue_letters = {
-            '1': ['A', 'B', 'E', 'M'],
-            '3': [],
-            '4': ['C'],
-            '5': [],
-            '6': ['C', 'E'],
-            '9': ['I'],
-            '10': [],
-            '13': ['C', 'E'],
-            '99': []
-        }
-        receive_letters = {
-            '1': ['A', 'B', 'C', 'E', 'M', 'I'],
-            '3': ['B', 'C', 'I'],
-            '4': ['B', 'C', 'I'],
-            '5': ['B', 'C', 'I'],
-            '6': ['A', 'B', 'C', 'I'],
-            '9': ['E'],
-            '10': ['E'],
-            '13': ['A', 'B', 'C', 'I'],
-            '99': ['B', 'C', 'I']
-        }
-        self.l10n_latam_document_type_id = 6
-        subcontractor_letters = issue_letters[self.subcontractor_partner_id.l10n_ar_afip_responsibility_type_id.code]
-        customer_letters = receive_letters[self.partner_id.l10n_ar_afip_responsibility_type_id.code]
-        letters = list(set(subcontractor_letters) & set(customer_letters))
-        types = self.env['l10n_latam.document.type'].search(['&',('l10n_ar_letter','in',letters), ('internal_type','=','invoice')])
-        self.l10n_latam_document_type_id = types[0]
-        
+            issue_letters = {
+                '1': ['A', 'B', 'E', 'M'],
+                '3': [],
+                '4': ['C'],
+                '5': [],
+                '6': ['C', 'E'],
+                '9': ['I'],
+                '10': [],
+                '13': ['C', 'E'],
+                '99': []
+            }
+            receive_letters = {
+                '1': ['A', 'B', 'C', 'E', 'M', 'I'],
+                '3': ['B', 'C', 'I'],
+                '4': ['B', 'C', 'I'],
+                '5': ['B', 'C', 'I'],
+                '6': ['A', 'B', 'C', 'I'],
+                '9': ['E'],
+                '10': ['E'],
+                '13': ['A', 'B', 'C', 'I'],
+                '99': ['B', 'C', 'I']
+            }
+            record.l10n_latam_document_type_id = 6
+            subcontractor_letters = issue_letters[record.subcontractor_partner_id.l10n_ar_afip_responsibility_type_id.code]
+            customer_letters = receive_letters[record.partner_id.l10n_ar_afip_responsibility_type_id.code]
+            letters = list(set(subcontractor_letters) & set(customer_letters))
+            types = record.env['l10n_latam.document.type'].search(['&',('l10n_ar_letter','in',letters), ('internal_type','=','invoice')])
+            record.l10n_latam_document_type_id = types[0]
+    
+    @api.constrains('name', 'journal_id', 'state')
+    def _check_unique_sequence_number(self):
+        no_subinvoiced = self.filtered(lambda x: not x.invoiced_by_subcontractor)
+        if self != no_subinvoiced:
+            # Subcontractor invoices can have same sequence numbers.
+            # TODO: Check uniqueness between invoices of the same subcontractor
+            print('_check_unique_sequence_number','Ignoring move invoiced by subcontractor', self-no_subinvoiced)
+            
+        super(AccountMove, no_subinvoiced)._check_unique_sequence_number()
+
     # def _move_autocomplete_invoice_lines_values(self):
     #     print('_move_autocomplete_invoice_lines_values')
     #     super(AccountMove, self)._move_autocomplete_invoice_lines_values()
