@@ -134,6 +134,29 @@ class AccountMove(models.Model):
         
         return where_string, param
     
+    def _set_next_sequence(self):
+        if self.subcontractor_partner_id:
+            context = {
+                'default_afip_invoicing_partner': self.subcontractor_partner_id,
+                'default_l10n_ar_afip_pos_number': self.subcontractor_partner_id.subcontractor_pos_number
+            }
+            # post with context to AFIP WS 
+            self = self.with_context(context)
+        print('_set_next_sequence context',self._context)
+        return super(AccountMove, self)._set_next_sequence()
+        
+    def _get_starting_sequence(self):
+        self.ensure_one()
+        if self.subcontractor_partner_id:
+            context = {
+                'default_afip_invoicing_partner': self.subcontractor_partner_id,
+                'default_l10n_ar_afip_pos_number': self.subcontractor_partner_id.subcontractor_pos_number
+            }
+            # post with context to AFIP WS 
+            self = self.with_context(context)
+        print('_get_starting_sequence context',self._context)
+        return super(AccountMove,self)._get_starting_sequence()
+    
     def _check_argentinean_invoice_taxes(self):
         moves = self.filtered(lambda x: not x.invoiced_by_subcontractor)
         super(AccountMove, moves)._check_argentinean_invoice_taxes()
