@@ -7,12 +7,34 @@
         <field eval="90" name="priority" />
         <field name="inherit_id" ref="account.view_partner_property_form" />
         <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button class="oe_stat_button" type="object"
+                    name="action_open_subcontractor_invoices"
+                    attrs="{'invisible': [('subcontractor_invoice_count', '=', 0)]}"
+                    icon="fa-pencil-square-o">
+                    <field string="Sub Invoices" name="subcontractor_invoice_count" widget="statinfo" />
+                </button>
+            </div>
             <group name="accounting_entries" position="after">
-                <group name="thirdParty" string="Third Party Invoicing">
+                <group name="subcontractInvoices" string="Subcontract Invoicing">
                     <field name="subcontractor_pos_number" />
                 </group>
             </group>
         </field>
     </record>
-
+    <record id="view_res_partner_filter_inherit" model="ir.ui.view">
+        <field name="name">res.partner.select.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter" />
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='supplier']" position="after">
+                <filter string="Subcontractor invoices" name="subcontractor_filter"
+                    domain="[('subcontractor_invoice_count', '>', 0)]" />
+            </xpath>
+            <xpath expr="//filter[@name='supplier']" position="after"></xpath>
+        </field>
+    </record>
+    <record id="account.res_partner_action_supplier" model="ir.actions.act_window">
+        <field name="context">{'search_default_subcontractor_filter': 1,'search_default_supplier': 1,'res_partner_search_mode': 'supplier', 'default_is_company': True, 'default_supplier_rank': 1}</field>
+    </record>
 </odoo>
